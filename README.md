@@ -1,5 +1,7 @@
 # Spark Ledger
 
+> **Archived.** This is a museum of July 2026 35B flag decisions. It does not start a model and the numbers are not today’s incumbent. To measure **your** server this week, use [zwell-bench](https://github.com/Coinupbtc/zwell-bench).
+
 ![Blotter](docs/screenshots/overview.png)
 
 ## At a glance
