@@ -22,6 +22,8 @@ chmod +x setup.sh
 # open http://127.0.0.1:8767/
 ```
 
+Or open **[the GitHub Pages build](https://coinupbtc.github.io/spark-ledger/)**.
+
 `./scripts/smoke.sh` checks the headline, a SHIP number, a KILL card, and source integrity.
 
 ## How to read it
