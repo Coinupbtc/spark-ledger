@@ -1,0 +1,4 @@
+dogfood-output/
+.DS_Store
+*.pyc
+.venv/

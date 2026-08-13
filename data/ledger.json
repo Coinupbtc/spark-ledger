@@ -1,0 +1,122 @@
+{
+  "meta": {
+    "app": "Spark Ledger",
+    "version": "1.0.0",
+    "today": "2026-08-13",
+    "rule": "A number without a public source cannot sit on this blotter.",
+    "disclaimer": "Decisions below cite public Coinupbtc reports. Hardware is NVIDIA DGX Spark. Not a trading product. Not a MiaAI Labs repo."
+  },
+  "respect": {
+    "who": "MiaAI Labs",
+    "what": "Published the Qwen3.6-35B UD-Q8_K_XL Spark serve recipe we used as the serving baseline for the 35B cards.",
+    "url": "https://github.com/MiaAI-Lab/Qwen3.6-35B-A3B-UD-Q8_K_XL_DGX-Spark-Recipe",
+    "scope": "Credit is for that recipe only — not for zwell-bench, this ledger, or other work."
+  },
+  "cards": [
+    {
+      "id": "SK-008",
+      "decision": "SHIP",
+      "date": "2026-07-11",
+      "title": "BALANCED v8 ngram-mod on 35B",
+      "instrument": "Qwen3.6-35B-A3B UD-Q8_K_XL · llama.cpp",
+      "hypothesis": "draft-mtp + ngram-mod + ngram-simple (order matters) beats ngram-simple alone without a quality drop.",
+      "metric": "coding 35.8 → 169.4 tok/s (4.7× vs v1)",
+      "also": "refactor 34 → 264 tok/s · bench_v5 19/19 · live exclusive confirm",
+      "why": "Same model, same box, flags only. Quality held. This is the incumbent 35B profile.",
+      "lesson": "Spec list order is load-bearing: ngram-simple before ngram-mod shadows the win.",
+      "source": "https://github.com/Coinupbtc/miaai35-tune/blob/master/REPORT.md",
+      "source_label": "miaai35-tune REPORT.md §16",
+      "mia_recipe": true
+    },
+    {
+      "id": "SK-003",
+      "decision": "SHIP",
+      "date": "2026-07-09",
+      "title": "Thinking off for interactive 35B",
+      "instrument": "Qwen3.6-35B-A3B · client enable_thinking=false",
+      "hypothesis": "Default CoT burns wall-clock without moving the 9/10 quality rubric.",
+      "metric": "short 38.23 tok/s / 0.99s vs thinking-on 21.01 tok/s / 46.5s",
+      "also": "coding quality 9.0/10 both sides · long TTFT ~7–8s @ 9.5k tok",
+      "why": "Biggest interactive win was a client flag, not another engine rebuild.",
+      "lesson": "Measure wall-clock and quality on the same prompt set. Speed without a rubric is a vibe.",
+      "source": "https://github.com/Coinupbtc/miaai35-tune/blob/master/RESULTS.md",
+      "source_label": "miaai35-tune RESULTS.md",
+      "mia_recipe": true
+    },
+    {
+      "id": "SK-010",
+      "decision": "KILL",
+      "date": "2026-07-09",
+      "title": "cache-reuse on this llama.cpp build",
+      "instrument": "llama.cpp a410713 · --cache-reuse 256",
+      "hypothesis": "Repeat calls with a stable prefix would skip KV reprocessing.",
+      "metric": "repeat TTFT == cold TTFT (~5.6–6.0s @ ~9.2k) in 3/3 configs",
+      "also": "slot matched (sim_best 0.182) yet no KV-shift · canary fresh 3/3",
+      "why": "Silent no-op. Shipping it would have looked like a cache win in the unit file and done nothing.",
+      "lesson": "Journal the slot match AND the TTFT. Presence of a flag is not integrity of a speedup.",
+      "source": "https://github.com/Coinupbtc/miaai35-tune/blob/master/REPORT.md",
+      "source_label": "miaai35-tune REPORT.md PASS10–12",
+      "mia_recipe": true
+    },
+    {
+      "id": "SK-012",
+      "decision": "KILL",
+      "date": "2026-07-11",
+      "title": "ub2048 concurrent prefill",
+      "instrument": "llama.cpp ubatch 2048 vs 1024",
+      "hypothesis": "Larger ubatch would pay for itself under mixed chat + long prefill.",
+      "metric": "small-chat during big PP: 2.16s TTFT / 17.4 tok/s vs ub1024 0.9s / 46.6",
+      "also": "Rejected twice. Solo decode also slipped on the first pass.",
+      "why": "Starves the interactive lane. Lever closed until the architecture changes.",
+      "lesson": "Never score a prefill knob on a quiet box only. Concurrent TTFT is the user.",
+      "source": "https://github.com/Coinupbtc/miaai35-tune/blob/master/REPORT.md",
+      "source_label": "miaai35-tune REPORT.md §16 option 2",
+      "mia_recipe": true
+    },
+    {
+      "id": "SK-013",
+      "decision": "KILL",
+      "date": "2026-07-11",
+      "title": "fp16 KV on 35B",
+      "instrument": "Qwen3.6-35B · fp16 KV vs q8_0 KV",
+      "hypothesis": "q8_0 dequant is the decode bottleneck.",
+      "metric": "coding 74.9 → 65.3 tok/s (−13%) · short −17% · refactor −8%",
+      "also": "essay/ctx8k only marginally up",
+      "why": "Same-conditions A/B. The hypothesis was wrong. Keep q8_0.",
+      "lesson": "A prettier KV type is not a speedup. Kill it in public so nobody retries it as folklore.",
+      "source": "https://github.com/Coinupbtc/miaai35-tune/blob/master/REPORT.md",
+      "source_label": "miaai35-tune REPORT.md §16 option 3",
+      "mia_recipe": true
+    },
+    {
+      "id": "SK-014",
+      "decision": "HOLD",
+      "date": "2026-07-11",
+      "title": "gpt-oss-120b as daily driver",
+      "instrument": "gpt-oss-120b MXFP4 · specialist lane",
+      "hypothesis": "A smarter model should replace the 35B incumbent.",
+      "metric": "hard6 6/6 (5–29s/item) · coding 41.5 tok/s vs live v8 169.4",
+      "also": "makespan item both Qwen engines failed · bench_v5 16/19 unadjudicated (no transcripts)",
+      "why": "Better at hard reasoning, worse at the cron/chat speed budget. Specialist, not a replacement.",
+      "lesson": "Split verdicts stay HOLD until the job is named. Do not average two different uses into one winner.",
+      "source": "https://github.com/Coinupbtc/miaai35-tune/blob/master/REPORT.md",
+      "source_label": "miaai35-tune REPORT.md §16 option 5",
+      "mia_recipe": false
+    },
+    {
+      "id": "SK-001",
+      "decision": "SHIP",
+      "date": "2026-07-20",
+      "title": "Objective bakeoff harness (zwell-bench)",
+      "instrument": "Any OpenAI-compatible endpoint",
+      "hypothesis": "Chat screenshots are not a bakeoff. Executed coding + exact JSON + tool choice are.",
+      "metric": "Harness ships with coding (executed), extraction, vision, tools, agentic order",
+      "also": "Example results in-repo · hosts scrubbed",
+      "why": "A recipe that starts is not a model that passes. The harness is the other half of the desk.",
+      "lesson": "If the grader cannot fail, you are not measuring.",
+      "source": "https://github.com/Coinupbtc/zwell-bench",
+      "source_label": "zwell-bench README",
+      "mia_recipe": false
+    }
+  ]
+}
